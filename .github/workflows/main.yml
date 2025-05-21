@@ -46,7 +46,21 @@ jobs:
         run: |
           kubectl apply -f terraform-rds-secret-job.yaml
           kubectl get all
-          POD_NAME_NEW=$(kubectl get pods --selector=job-name=terraform-rds-secret-job -o jsonpath='{.items[0].metadata.name}')
+          echo "Waiting for pod to be created..."
+          for i in {1..10}; do
+            POD_NAME_NEW=$(kubectl get pods --selector=job-name=terraform-rds-secret-job -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            if [ -n "$POD_NAME_NEW" ]; then
+              echo "Pod found: $POD_NAME"
+            break
+            fi
+              echo "Pod not ready yet, sleeping 5 seconds..."
+            sleep 5
+          done
+
+          if [ -z "$POD_NAME" ]; then
+            echo "Error: Pod not created within timeout."
+          exit 1
+          fi
           
           kubectl logs -f $POD_NAME_NEW
           
