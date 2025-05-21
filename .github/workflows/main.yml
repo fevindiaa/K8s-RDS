@@ -54,10 +54,10 @@ jobs:
             break
             fi
               echo "Pod not ready yet, sleeping 5 seconds..."
-            sleep 5
+            sleep 20
           done
 
-          if [ -z "$POD_NAME" ]; then
+          if [ -z "$POD_NAME_NEW" ]; then
             echo "Error: Pod not created within timeout."
           exit 1
           fi
