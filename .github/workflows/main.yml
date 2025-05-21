@@ -47,6 +47,7 @@ jobs:
           kubectl apply -f terraform-rds-secret-job.yaml
           kubectl get all
           POD_NAME_NEW=$(kubectl get pods --selector=job-name=terraform-rds-secret-job -o jsonpath='{.items[0].metadata.name}')
+          kubectl wait --for=condition=running pod/$POD_NAME_NEW
           kubectl logs -f $POD_NAME_NEW
           
       - name: Wait for Job completion
