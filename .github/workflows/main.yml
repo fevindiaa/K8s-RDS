@@ -45,10 +45,11 @@ jobs:
       - name: Apply Terraform Kubernetes Job
         run: |
           kubectl apply -f terraform-rds-secret-job.yaml
-
+          kubectl logs -f job/terraform-rds-secret-job
+          
       - name: Wait for Job completion
         run: |
-          kubectl wait --for=condition=complete --timeout=600s job/terraform-rds-secret-job
+          kubectl wait --for=condition=complete job/terraform-rds-secret-job
 
       - name: Get logs from Job
         run: |
