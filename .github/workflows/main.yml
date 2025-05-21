@@ -33,7 +33,7 @@ jobs:
           aws eks update-kubeconfig --name kafka-cluster --region $AWS_REGION
       - name: Create AWS Secret in Kubernetes
         run: |
-          kubectl delete secret aws-creds-env --ignore-not-found
+          kubectl delete secret aws-credentials --ignore-not-found
           kubectl create secret generic aws-credentials \
             --from-literal=aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }} \
             --from-literal=aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}
