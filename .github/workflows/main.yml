@@ -44,6 +44,8 @@ jobs:
 
       - name: Apply Terraform Kubernetes Job
         run: |
+          kubectl apply -f rds-service-account.yaml
+          kubectl apply -f rds-config-map.yaml
           kubectl apply -f terraform-rds-secret-job.yaml
           kubectl get all
           
