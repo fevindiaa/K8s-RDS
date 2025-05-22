@@ -1,4 +1,4 @@
-name: RDS Provision via Terraform Job on EKS
+name: RDS Provision via Terraform Job through K8s operator on EKS
 
 on:
   push:
@@ -8,8 +8,8 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-  deploy:
-    name: Apply Terraform in EKS Job
+  setup-aws-eks:
+    name: Setup AWS and EKS
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +31,33 @@ jobs:
       - name: Setup kubeconfig for EKS
         run: |
           aws eks update-kubeconfig --name kafka-cluster --region $AWS_REGION
+          mkdir -p $HOME/.kube
+          cp ~/.kube/config kubeconfig
+          
+      - name: Save kubeconfig as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kubeconfig
+          path: kubeconfig
+
+  apply-terraform-job:
+    name: Apply Terraform Kubernetes Job
+    runs-on: ubuntu-latest
+    needs: setup-aws-eks
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download kubeconfig artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: kubeconfig
+          path: ~/.kube
+
+      - name: Set KUBECONFIG environment variable
+        run: echo "KUBECONFIG=$HOME/.kube/kubeconfig" >> $GITHUB_ENV
+
       - name: Create AWS Secret in Kubernetes
         run: |
           kubectl delete secret aws-credentials --ignore-not-found
@@ -44,11 +71,11 @@ jobs:
 
       - name: Apply Terraform Kubernetes Job
         run: |
-          kubectl apply -f rds-service-account.yaml
-          kubectl apply -f rds-config-map.yaml
-          kubectl apply -f terraform-rds-secret-job.yaml
+          kubectl apply -f k8s/rds-service-account.yaml
+          kubectl apply -f k8s/rds-config-map.yaml
+          kubectl apply -f k8s/terraform-rds-secret-job.yaml
           kubectl get all
-          
+
       - name: Wait for Job completion
         run: |
           kubectl wait --for=condition=complete --timeout=1200s job/terraform-rds-secret-job
